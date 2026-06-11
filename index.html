@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="origin">
+  <meta name="description" content="Mapa das operações realizadas no J3M.">
+  <title>Operações J3M</title>
+
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://tile.openstreetmap.org">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  >
+
+  <style>
+    :root {
+      --ink: #13251f;
+      --muted: #65736e;
+      --accent: #e8613a;
+      --accent-dark: #b73e20;
+      --line: rgba(19, 37, 31, 0.12);
+      --shadow: 0 18px 45px rgba(16, 37, 30, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      overflow: hidden;
+      color: var(--ink);
+      background: #dce4df;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .leaflet-popup-content-wrapper {
+      overflow: hidden;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .leaflet-popup-content {
+      width: 260px !important;
+      margin: 0;
+    }
+
+    .operation-popup {
+      padding: 18px;
+    }
+
+    .operation-popup h2 {
+      margin: 0 0 5px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.25rem;
+      line-height: 1.2;
+    }
+
+    .operation-popup .location {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .operation-links {
+      display: grid;
+      gap: 8px;
+      padding-top: 13px;
+      border-top: 1px solid var(--line);
+    }
+
+    .operation-links a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: #fff;
+      background: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    .operation-links a::after {
+      content: "↗";
+      font-size: 1rem;
+    }
+
+    .operation-links a:hover,
+    .operation-links a:focus-visible {
+      transform: translateY(-1px);
+      background: var(--accent-dark);
+    }
+
+    .leaflet-control-zoom {
+      overflow: hidden;
+      border: 0 !important;
+      border-radius: 12px !important;
+      box-shadow: 0 8px 24px rgba(19, 37, 31, 0.16) !important;
+    }
+
+    .leaflet-control-attribution {
+      font-size: 10px;
+    }
+
+    @media (max-width: 640px) {
+      .leaflet-control-zoom {
+        margin-right: 12px !important;
+        margin-bottom: 22px !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main id="map" aria-label="Mapa das operações J3M"></main>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <script>
+    // Adicione, remova ou altere operações somente nesta lista.
+    const operacoes = [
+      {
+        nome: "Parque da Independência",
+        local: "Ipiranga, São Paulo - SP",
+        coordenadas: [-23.581778, -46.60946],
+        links: [
+          {
+            nome: "06/07/2025",
+            url: "https://sessions.j3m-iot.com.br/019b1633-af66-7015-ad51-1e94da549716"
+          },
+          {
+            nome: "11/04/2026",
+            url: "https://sessions.j3m-iot.com.br/019d7eb0-016a-720b-8401-752435ebf152"
+          }
+        ]
+      },
+      {
+        nome: "Parque Trianon",
+        local: "Cerqueira César, São Paulo - SP",
+        coordenadas: [-23.561961, -46.656976],
+        links: [
+          {
+            nome: "21/04/2026",
+            url: "https://sessions.j3m-iot.com.br/019eb3f8-cdf4-73f2-8ea4-32092d0ef288"
+          }
+        ]
+      },
+      {
+        nome: "Parque Ibirapuera",
+        local: "Vila Mariana, São Paulo - SP",
+        coordenadas: [-23.589292, -46.6586],
+        links: [
+          {
+            nome: "04/01/2025",
+            url: "https://sessions.j3m-iot.com.br/019ba0bf-2002-70e4-a21a-25be6979420d"
+          }
+        ]
+      },
+      {
+        nome: "Parque Villa-Lobos",
+        local: "Alto de Pinheiros, São Paulo - SP",
+        coordenadas: [-23.546992, -46.726049],
+        links: [
+          {
+            nome: "02/05/2026",
+            url: "https://sessions.j3m-iot.com.br/019dead3-5cf8-70ad-a328-75ba17803969"
+          }
+        ]
+      },
+      {
+        nome: "Parque Central",
+        local: "Vila Assunção, Santo André - SP",
+        coordenadas: [-23.674811, -46.530174],
+        links: [
+          {
+            nome: "25/04/2026",
+            url: "https://sessions.j3m-iot.com.br/019dc78d-ce3f-72ae-ab6b-fda9a9434832"
+          }
+        ]
+      },
+      {
+        nome: "Espaço Verde Chico Mendes",
+        local: "São José, São Caetano do Sul - SP",
+        coordenadas: [-23.632783, -46.573492],
+        links: [
+          {
+            nome: "06/06/2026",
+            url: "https://sessions.j3m-iot.com.br/019e9ed8-1f57-72ec-a3b3-cfe32f3edd5a"
+          }
+        ]
+      },
+      {
+        nome: "Parque Raphael Lazzuri",
+        local: "Vila Tereza, São Bernardo do Campo - SP",
+        coordenadas: [-23.680078, -46.558728],
+        links: [
+          {
+            nome: "11/01/2025",
+            url: "https://sessions.j3m-iot.com.br/019eb3c7-ff4f-72a0-a9fe-f78ac762da2b"
+          }
+        ]
+      },
+      {
+        nome: "Parque Celso Daniel",
+        local: "Jardim, Santo André - SP",
+        coordenadas: [-23.647381, -46.53588],
+        links: [
+          {
+            nome: "16/08/2025",
+            url: "https://sessions.j3m-iot.com.br/019afe43-6552-7260-99e9-5b88f86b4f88"
+          },
+          {
+            nome: "20/09/2025",
+            url: "https://sessions.j3m-iot.com.br/0199687a-f7ce-72b7-8898-4affb8c839d3"
+          },
+          {
+            nome: "01/03/2026 - Interno",
+            url: "https://sessions.j3m-iot.com.br/019cab7d-9590-7166-bc7a-cffa15a7110c"
+          },
+          {
+            nome: "01/03/2026 - Externo",
+            url: "https://sessions.j3m-iot.com.br/019cab7d-4de1-718a-a5f2-2f3a7db06eac"
+          },
+          {
+            nome: "01/03/2026 - Completo",
+            url: "https://sessions.j3m-iot.com.br/019cab7c-b037-70eb-a3d1-e8c64a1d2c33"
+          },
+          {
+            nome: "30/05/2026",
+            url: "https://sessions.j3m-iot.com.br/019e7b4d-28a4-7396-9ac3-0e2ecf0c6d8f"
+          }
+        ]
+      }
+    ];
+
+    const marcoZeroSP = [-23.55035, -46.63419];
+
+    const map = L.map("map", {
+      center: marcoZeroSP,
+      zoom: 11,
+      zoomControl: false
+    });
+
+    L.control.zoom({ position: "bottomright" }).addTo(map);
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      referrerPolicy: "origin",
+      attribution:
+        'J3M IoT'
+    }).addTo(map);
+
+    function escaparHTML(valor) {
+      const elemento = document.createElement("div");
+      elemento.textContent = valor;
+      return elemento.innerHTML;
+    }
+
+    function criarPopup(operacao) {
+      const links = operacao.links
+        .map(
+          (link) => `
+            <a
+              href="${escaparHTML(link.url)}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              ${escaparHTML(link.nome)}
+            </a>
+          `
+        )
+        .join("");
+
+      return `
+        <article class="operation-popup">
+          <h2>${escaparHTML(operacao.nome)}</h2>
+          <p class="location">${escaparHTML(operacao.local)}</p>
+          <div class="operation-links">${links}</div>
+        </article>
+      `;
+    }
+
+    operacoes.forEach((operacao) => {
+      L.marker(operacao.coordenadas, {
+        title: operacao.nome,
+        alt: operacao.nome
+      })
+        .addTo(map)
+        .bindPopup(criarPopup(operacao), {
+          closeButton: false,
+          maxWidth: 290,
+          minWidth: 260
+        });
+    });
+  </script>
+</body>
+</html>
