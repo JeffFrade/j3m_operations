@@ -124,12 +124,6 @@
       font-size: 10px;
     }
 
-    @media (max-width: 640px) {
-      .leaflet-control-zoom {
-        margin-right: 12px !important;
-        margin-bottom: 22px !important;
-      }
-    }
   </style>
 </head>
 
@@ -332,17 +326,30 @@
 
     const map = L.map("map", {
       center: marcoZeroSP,
-      zoom: 9,
-      zoomControl: false
+      zoom: 9
     });
 
-    L.control.zoom({ position: "bottomright" }).addTo(map);
-
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    const openStreetMap = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       referrerPolicy: "origin",
       attribution:
-        'J3M IoT'
+        'J3M IoT | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    function camadaGoogle(tipo) {
+      return L.tileLayer(`https://mt{s}.google.com/vt/lyrs=${tipo}&x={x}&y={y}&z={z}`, {
+        subdomains: "0123",
+        maxZoom: 21,
+        attribution: '&copy; Google'
+      });
+    }
+
+    L.control.layers({
+      "OpenStreetMap": openStreetMap,
+      "Google Street": camadaGoogle("m"),
+      "Google Satélite": camadaGoogle("s"),
+      "Google Híbrido": camadaGoogle("y"),
+      "Google Relevo": camadaGoogle("p")
     }).addTo(map);
 
     function escaparHTML(valor) {
